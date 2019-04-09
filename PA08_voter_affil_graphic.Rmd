@@ -1,0 +1,45 @@
+---
+title: "PA 08 Voter Affiliation"
+author: "Beau Meche"
+date: "April 9, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(tidyverse)
+library(gt)
+```
+
+```{r graphic, echo=FALSE}
+# read in the data from a similar survey from PA district 08
+penn <- read.csv("elections-pa08-3.csv")
+# My goal here is to plot, from PA 08 congressional district, the variance between voters who vote with their affiliated party and those who don't. Of this subset, I think it is interesting to look at the variance by education, as these are large determining factors in analyses of voter behavior. Combining all non-Republican/Democrat parties gives a greater visual impact and represents 3rd parties together. As stated in the note, the contents of my upshot data only produed binary gender and was not an oversight or omission. 
+
+q5 <- penn %>% 
+  # select vars we care about (4 is a personal record without help)
+  select(race_edu, response, partyid, gender) %>% 
+  # remove useless rows
+  filter(race_edu != "[DO NOT READ] Don't know/Refused") %>% 
+  filter(partyid != "[DO NOT READ] Refused") %>% 
+  # stack all 3rd parties together
+  mutate(parties2 = case_when(partyid == "Republican" ~ "Rep.",
+                             partyid == "Democrat" ~ "Dem.",
+                             TRUE ~ "Oth.")) %>% 
+  # give the race_edu categories shorter names
+  mutate(race_edu = case_when(race_edu == "Nonwhite" ~ "Nonwhite",
+                              race_edu == "White, 4-Year College Grads" ~ "White, college grad",
+                              race_edu == "White, No 4-Year College Degree" ~ "White, not college grad")) %>%
+  #group by constituency for contrast
+    group_by(parties2) %>% 
+  # chart the data to see where people diverge from their parties and to where they go
+    ggplot(aes(x = response, y = parties2), alpha = .7) +geom_jitter(height = .3, width = .3) +facet_wrap(~race_edu) + labs(title = "Mapping Affiliation vs. Constituency by Demography and Education",
+                              subtitle = "Sample of 493 Voters from Pennsylvania's 8th Congressional District",
+                              x = "Voter Party Affiliation",
+                              y = "Constituency (2019 Ballots)", 
+                              caption = "Data courtesy of NYT Upshot and Sienna College")
+    
+q5
+```
+
